@@ -1,0 +1,158 @@
+# mkdocs.yaml - Specifying the documentation construction
+# ------------------------------------------------------------------------------
+# run with `mkdocs build --no-directory-urls` to build static site.
+# server with `mkdocs serve`
+
+site_name: QuTools
+
+docs_dir: "mkdocs" # Folder to search for documentation .md-files
+
+# Settings for Building as a static site ---------------------------------------
+site_url: ""
+use_directory_urls: false
+
+
+# Theme ------------------------------------------------------------------------
+theme:
+  # features:
+  #   - navigation.footer
+  name: 'material'
+  # font: false
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: 'orange' # 'blue'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: 'orange' # 'blue'
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  logo: assets/qt.svg
+  favicon: assets/qt-orange.svg
+
+
+# Footer information -----------------------------------------------------------
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/janniszeller/
+      name: GitHub
+    - icon: fontawesome/brands/linkedin
+      link: https://de.linkedin.com/in/jannis-zeller-12477a221
+      name: Linkedin
+copyright: Copyright &copy; 2024 Jannis Zeller
+
+
+# css, js, & md extentions -----------------------------------------------------
+extra_css:
+  - styles/extra.css
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_javascript:
+  - js/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+
+# Plugins ----------------------------------------------------------------------
+plugins:
+  - search
+  - autorefs
+  - section-index
+  # - mkdocs-jupyter:
+  #     include: [
+  #       scores.ipynb,
+  #       kmeans-full.ipynb,
+  #       cross-sectional.ipynb,
+  #       longitudinal.ipynb,
+  #       stm.R.ipynb
+  #     ]
+  #     include_requirejs: true
+  - exclude-search:
+      exclude:
+        - autobuild
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          # paths: [.]
+          options:
+            separate_signature: true
+            line_length: 60
+            docstring_style: numpy
+
+
+# Pre-Build-Hooks --------------------------------------------------------------
+hooks:
+  - ./mkdocs/hooks/reset.py
+  - ./mkdocs/hooks/full-reference-autobuild.py
+  # - ./mkdocs/hooks/notebooks-symlinks.py
+  # - ./mkdocs/hooks/reports-symlink.py
+
+
+# The actual Structure and Included docs ---------------------------------------
+nav:
+  - Home: index.md
+  # - Analyses:
+  #   - content/analyses_index.md
+  #   - "Preprocessing Scores": "content/autobuilt/notebooks-symlinks/preprocessing/scores.ipynb"
+  #   - "Score Clusters": "content/autobuilt/notebooks-symlinks/analyses/score-cluster/kmeans-full.ipynb"
+  #   - "Clusters - Cross-Sectional": "content/autobuilt/notebooks-symlinks/analyses/cluster-development/cross-sectional.ipynb"
+  #   - "Clusters - Longitudinal": "content/autobuilt/notebooks-symlinks/analyses/cluster-development/longitudinal.ipynb"
+  #   - "Clusters - Structural Topic Models": "content/autobuilt/notebooks-symlinks/analyses/topic-models/stm.R.ipynb"
+  - "Full Reference":
+    - clustering:
+      - content/autobuilt/clustering.md
+      - cluster_wrapper:  content/autobuilt/clustering/cluster_wrapper.md
+      - clusters:         content/autobuilt/clustering/clusters.md
+    - core:
+      - content/autobuilt/core.md
+      - batched_iter:   content/autobuilt/core/batched_iter.md
+      - classifier:     content/autobuilt/core/classifier.md
+      - config:         content/autobuilt/core/config.md
+      - io:             content/autobuilt/core/io.md
+      - ols:            content/autobuilt/core/ols.md
+      - pandas:         content/autobuilt/core/pandas.md
+      - scores:         content/autobuilt/core/scores.md
+      - text:           content/autobuilt/core/text.md
+      - trainulation:   content/autobuilt/core/trainulation.md
+      - validation:     content/autobuilt/core/validation.md
+      - yaml_loader:    content/autobuilt/core/yaml_loader.md
+    - data:
+      - content/autobuilt/data.md
+      - config:             content/autobuilt/data/config.md
+      - data:               content/autobuilt/data/data.md
+      - embedding_models:   content/autobuilt/data/embedding_models.md
+      - embeddings:         content/autobuilt/data/embeddings.md
+      - id_splits:          content/autobuilt/data/id_splits.md
+      - subscales:          content/autobuilt/data/subscales.md
+    - scoring:
+      - content/autobuilt/scoring.md
+      - interrater_data:    content/autobuilt/scoring/interrater_analysis.md
+      - scorer_base:        content/autobuilt/scoring/scorer_base.md
+      - scorer_ebds:        content/autobuilt/scoring/scorer_ebds.md
+      - scorer_finetune:    content/autobuilt/scoring/scorer_finetune.md
+      - scorer_results:     content/autobuilt/scoring/scorer_results.md
+      - taskwise_analysis:  content/autobuilt/scoring/taskwise_analysis.md
+    - scorer_results_regressor:
+      - content/autobuilt/scorer_results_regressor.md
+      - sr_regressor_results: content/autobuilt/scorer_results_regressor/sr_regressor_results.md
+  - About: content/about.md
+  - License: content/license.md
+  - Imprint: content/imprint.md

@@ -1,0 +1,191 @@
+# task_type: "text" or "multiple_choice"
+# scoring: "thresholds" or "summation",
+#   - If scoring is "summation" and "max_score" is not equal to the count of single items in the mc-task, the relative score is used.
+metadata:
+  id_column: "ID"
+
+tasks:
+  A1a.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - A1a.
+  A1b.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A1b.1"
+      - "A1b.2"
+  A2.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A2.1"
+      - "A2.2"
+  A3.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A3.1"
+      - "A3.2"
+  A4.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A4.1"
+      - "A4.2"
+  A5.:
+    task_type: "multiple_choice"
+    scoring: "thresholds"
+    max_score: 2
+    items:
+      A5a.:
+        correct_response: 1
+      A5b.:
+        correct_response: 1
+      A5c.:
+        correct_response: 1
+      A5d.:
+        correct_response: 1
+      A5e.:
+        correct_response: 1
+      A5f.:
+        correct_response: 1
+  A6.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A6."
+  A7.:
+    task_type: "multiple_choice"
+    scoring: "thresholds"
+    max_score: 2
+    items:
+      A7a.:
+        correct_response: 1
+      A7b.:
+        correct_response: 1
+      A7c.:
+        correct_response: 1
+      A7d.:
+        correct_response: 1
+  A8.:
+    task_type: "multiple_choice"
+    scoring: "thresholds"
+    max_score: 2
+    items:
+      A8a.:
+        correct_response: 1
+      A8b.:
+        correct_response: 1
+      A8c.:
+        correct_response: 1
+      A8d.:
+        correct_response: 1
+      A8e.:
+        correct_response: 1
+  A9.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A9.1"
+      - "A9.2"
+  A10.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A10."
+  A11.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A11."
+  A12.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A12."
+  A13.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A13."
+  A14a.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A14a."
+  A14b.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A14b."
+  A15.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A15."
+  A16.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A16.1"
+      - "A16.2"
+  A17.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A17."
+  A18.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A18b."
+  A19.:
+    task_type: "multiple_choice"
+    scoring: "thresholds"
+    max_score: 2
+    items:
+      A19a.:
+        correct_response: 1
+      A19b.:
+        correct_response: 1
+      A19c.:
+        correct_response: 1
+      A19d.:
+        correct_response: 1
+      A19e.:
+        correct_response: 1
+  A20.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A20."
+  A21a.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A21a."
+  A21b.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A21b."
+  A22.:
+    task_type: "text"
+    max_score: 1
+    items:
+      - "A22."
+  A23.:
+    task_type: "text"
+    max_score: 3
+    items:
+      - "A23.1"
+      - "A23.2"
+      - "A23.3"
+  A24.:
+    task_type: "text"
+    max_score: 2
+    items:
+      - "A24.1"
+      - "A24.2"

@@ -1,0 +1,73 @@
+metadata:
+  id_column: "ID"
+  na_aliases:
+    - 99,
+    - '99'
+    - ''
+    - ' '
+    - '-'
+    - '--'
+    - 'NA'
+    - 'Na'
+    - 'na'
+    - 'NULL'
+    - 'Null'
+    - 'null'
+    - 'nan'
+    - 'NaN'
+    - 'Nan'
+    - 'NAN'
+
+views:
+  A1.:
+    tasks:
+      A1a.:
+        task_type: "text"
+        max_score: 1
+        items:
+          - A1a.
+      A1b.:
+        task_type: "text"
+        max_score: 2
+        items:
+          - A1b.1
+          - A1b.2
+  A2.:
+    tasks:
+      A2.:
+        task_type: "text"
+        max_score: 2
+        items:
+          - A2.1
+          - A2.2
+  A3.:
+    tasks:
+      A3.:
+        task_type: "text"
+        max_score: 2
+        items:
+          - A3.1
+          - A3.2
+  A4.:
+    tasks:
+      A4.:
+        task_type: "text"
+        max_score: 3
+        items:
+          - "A4.1"
+          - "A4.2"
+  A5.:
+    tasks:
+      A5.:
+        task_type: "multiple_choice"
+        scoring: "thresholds"
+        max_score: 2
+        items:
+          A5a.:
+            correct_response: 1
+          A5b.:
+            correct_response: 1
+          A5c.:
+            correct_response: 1
+          A5d.:
+            correct_response: 1
