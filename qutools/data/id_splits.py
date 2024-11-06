@@ -123,6 +123,8 @@ class IDsSplit(ABC):
                 )
 
             else:
+                if df_strat[id_col].duplicated().sum() > 0:
+                    raise ValueError("The IDs in the stratification DataFrame are not unique.")
                 df_strat = df_strat[[id_col, strat_col]]
                 df = pd.merge(df, df_strat, on=id_col, how="left")
                 drop_ids = df[id_col][df[strat_col].isna()].to_list()
