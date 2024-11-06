@@ -523,6 +523,7 @@ class QuScorerResults:
         self,
         splitwise: bool=False,
         mode: Literal["train", "test"]="test",
+        evaluate_na_filled: bool=True,
     ) -> None:
         """Evaluation of the text-tasks only.
 
@@ -533,6 +534,8 @@ class QuScorerResults:
             should be presentet
         mode : Literal["train", "test"]
             Wether to evaluate train or test predictions
+        evaluate_na_filled : bool
+            Wether to evaluate the predictions with missings filled with 0s.
 
         Raises
         ------
@@ -544,8 +547,9 @@ class QuScorerResults:
             self._evaluate_text_tasks(mode=mode)
             print("")
             self._evaluate_impossible_preds(mode=mode)
-            print("")
-            self._evaluate_text_tasks_na_filled(mode=mode)
+            if evaluate_na_filled:
+                print("")
+                self._evaluate_text_tasks_na_filled(mode=mode)
         else:
             self._evaluate_splitwise(mode=mode)
 
