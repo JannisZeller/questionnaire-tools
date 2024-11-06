@@ -595,6 +595,7 @@ class QuScorerResults:
         self,
         mode: Literal["train", "test"]="test",
         include_mc_only: bool=False,
+        evaluate_na_filled: bool=True,
     ) -> None:
         """Prints a verbose evaluation of the test/validation predictions in 3
         forms:
@@ -608,8 +609,14 @@ class QuScorerResults:
         ----------
         mode : Literal["train", "test"]
             Wether to evaluate train or test predictions
+        evaluate_na_filled : bool
+            Wether to evaluate the predictions with missings filled with 0s.
         """
-        self.evaluation_text_tasks(splitwise=False, mode=mode)
+        self.evaluation_text_tasks(
+            splitwise=False,
+            mode=mode,
+            evaluate_na_filled=evaluate_na_filled,
+        )
         print("")
         self.evaluation_with_mc(
             mode=mode,
