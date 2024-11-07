@@ -609,8 +609,11 @@ class QuScorerResults:
         ----------
         mode : Literal["train", "test"]
             Wether to evaluate train or test predictions
+        include_mc_only : bool
+            Wether to include only the multiple choice columns in the evaluation.
         evaluate_na_filled : bool
             Wether to evaluate the predictions with missings filled with 0s.
+
         """
         self.evaluation_text_tasks(
             splitwise=False,
