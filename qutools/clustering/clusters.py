@@ -1270,7 +1270,7 @@ def quclst_scatter_plot(
     plt.ylabel(ylabel)
 
     if savepath is not None:
-        plt.savefig(savepath, dpi=kwargs.get("dpi", 300))
+        plt.savefig(savepath, dpi=kwargs.get("dpi", 300), bbox_inches="tight")
 
     return fig
 
@@ -1623,7 +1623,7 @@ def quclst_elbow_plot(
     fig.tight_layout()
 
     if savepath is not None:
-        plt.savefig(savepath, dpi=kwargs.get("dpi", 300))
+        plt.savefig(savepath, dpi=kwargs.get("dpi", 300), bbox_inches="tight")
 
     return fig
 
@@ -1685,6 +1685,6 @@ def quclst_silhouette_plot(
     fig.tight_layout()
 
     if savepath is not None:
-        plt.savefig(savepath, dpi=kwargs.get("dpi", 300))
+        plt.savefig(savepath, dpi=kwargs.get("dpi", 300), bbox_inches="tight")
 
     return fig

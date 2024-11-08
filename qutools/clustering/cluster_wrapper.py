@@ -28,7 +28,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
 
-from qutools.clusters.cluster_wrapper import ClusterWrapper
+from qutools.clustering.cluster_wrapper import ClusterWrapper
 
 class GMWrapper(ClusterWrapper):
     def __init__(self, kernel: GaussianMixture):
