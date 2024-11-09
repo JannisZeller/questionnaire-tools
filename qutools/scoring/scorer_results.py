@@ -1105,7 +1105,12 @@ class QuScorerResults:
             "validate_scores": self.validate_scores,
         }
 
-    def to_dir(self, path: str, allow_empty_preds: bool=False) -> None:
+    def to_dir(
+        self,
+        path: str,
+        store_qdata: bool=True,
+        allow_empty_preds: bool=False,
+    ) -> None:
         """Saves the data to a directory. Overwrites possible existing files
         automatically.
 
@@ -1113,6 +1118,10 @@ class QuScorerResults:
         ----------
         path : str
             The directory to save the data to.
+        store_qdata : bool
+            Wether to store the internal `QuData`-object alongside the predictions.
+            If this is not used, the QuData-object must be passed when loading the
+            data again.
         allow_empty_preds : bool
             Wether to allow saving the data even if there are no predictions
             available. If `False` an exception is raised if there are no
@@ -1141,14 +1150,19 @@ class QuScorerResults:
         if self.id_split is not None:
             self.id_split.to_dir(dir_ / "id_split")
 
-        self.qudata.to_dir(dir_ / "qudata")
+        if store_qdata:
+            self.qudata.to_dir(dir_ / "qudata")
 
         with open(dir_ / "settings.json", "w") as f:
             json_dump(self.__settings_dict(), f, indent=2)
 
 
     @staticmethod
-    def from_dir(path: str, verbose: bool=False) -> "QuScorerResults":
+    def from_dir(
+        path: str,
+        qudata: QuData|str=None,
+        verbose: bool=False,
+    ) -> "QuScorerResults":
         """Loads a `CVPredictions`-object from directory.
 
         Parameters
@@ -1163,7 +1177,30 @@ class QuScorerResults:
         """
         p = Path(path)
         path_suffix_warning(p.suffix)
-        qudata = QuData.from_dir(path=p / "qudata", verbose=verbose)
+
+        if (p / "qudata").exists():
+            if qudata is not None:
+                print(
+                    "Warning: You passed a QuData-object, but the save-dir contains QuData. " +
+                    "The QuData-object passed will be ignored."
+                )
+            qudata = QuData.from_dir(path=p / "qudata", verbose=verbose)
+        else:
+            if not qudata:
+                raise ValueError(
+                    "No QuData-object passed and no QuData found in the save-dir. " +
+                    "Please pass a QuData-object or provide the path to the QuData."
+                )
+            if isinstance(qudata, str) or isinstance(qudata, Path):
+                qudata = QuData.from_dir(path=qudata, verbose=verbose)
+            if isinstance(qudata, QuData):
+                qudata = qudata
+            else:
+                raise ValueError(
+                    "The QuData-object passed is not of type QuData or a path to a QuData. " +
+                    "Please provide a valid QuData-object or a path to a QuData."
+                )
+
         try:
             df_preds = read_data(path=p / "predictions.gzip")
             if df_preds.size == 0:
