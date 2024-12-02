@@ -1,12 +1,16 @@
-import numpy as np
+"""
+# Scores Classifier
+
+This module contains the class for direct classification of the complete edits
+to the questionnaire based on the "true" scores.
+"""
+
+
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
 
 from tqdm import tqdm
-
-from matplotlib.pyplot import close as pltclose
-from matplotlib.pyplot import show as pltshow
 
 from ..data.config import QuConfig
 from ..data.data import QuData
@@ -21,17 +25,6 @@ from .classifier_results import QuClassifierResults, QuClassifierResults
 
 
 
-
-
-
-# ░█──░█ ░█▀▀▀█ ░█▀▀█ ░█─▄▀ ▀█▀ ░█▄─░█ ░█▀▀█     ░█─░█ ░█▀▀▀ ░█▀▀█ ░█▀▀▀
-# ░█░█░█ ░█──░█ ░█▄▄▀ ░█▀▄─ ░█─ ░█░█░█ ░█─▄▄     ░█▀▀█ ░█▀▀▀ ░█▄▄▀ ░█▀▀▀
-# ░█▄▀▄█ ░█▄▄▄█ ░█─░█ ░█─░█ ▄█▄ ░█──▀█ ░█▄▄█     ░█─░█ ░█▄▄▄ ░█─░█ ░█▄▄▄
-# - Stratification not equal to target?
-
-
-
-
 class QuScoresClassifierError(Exception):
     """An Exception class for the QuScoresClassifier"""
 
@@ -41,15 +34,22 @@ class QuScoresClassifier:
         self,
         model: Classifier=None,
         target_name: str="cluster",
-        feature_names: list=None,
         omit_classes: list=None,
     ) -> None:
+        """Initialize the QuScoresClassifier.
+
+        Parameters
+        ----------
+        model : Classifier
+            The classifier model to use.
+        target_name : str
+            The name of the target column.
+        omit_classes : list
+            A list of classes to omit from the target."""
         self.target = target_name
         self.pred = target_name + "_pred"
 
         self.omit_classes = omit_classes
-        # self.mc_units = kwargs.get("mc_units", "mc_tasks")
-
         self.class_order = None
 
         if model is None:
@@ -168,6 +168,27 @@ class QuScoresClassifier:
         df_target: pd.DataFrame,
         oversample: bool=False,
     ) -> QuClassifierResults:
+        """Evaluate the classifier with a fixed train-test- or CV-split.
+
+        Parameters
+        ----------
+        id_split : IDsSplit
+            The split of the data.
+        qudata : QuData
+            The data to use.
+        quclst : QuScoreClusters
+            The cluster object, that can be used to provide the target data.
+            Only either `quclst` or `df_target` should be passed.
+        df_target : pd.DataFrame
+            The target data. Must be matchable via the ID-col.
+        oversample : bool
+            Whether to use oversampling.
+
+        Returns
+        -------
+        QuClassifierResults
+            The results of the evaluation.
+        """
         full_train_fit = id_split.get_n_test() == 0
         self.features = qudata.quconfig.get_task_names()
         self.id_col = qudata.id_col
@@ -238,6 +259,32 @@ class QuScoresClassifier:
         random_state: int=42,
         verbose_split: bool=True,
     ) -> QuClassifierResults:
+        """Cross-validate the classifier with a random CV-split.
+
+        Parameters
+        ----------
+        qudata : QuData
+            The data to use.
+        quclst : QuScoreClusters
+            The cluster object, that can be used to provide the target data.
+            Only either `quclst` or `df_target` should be passed.
+        df_target : pd.DataFrame
+            The target data. Must be matchable via the ID-col.
+        df_strat : pd.DataFrame
+            The stratification data. Must be matchable via the ID-col.
+        strat_col : str
+            The column to stratify by.
+        stratify : bool
+            Whether to stratify.
+        oversample : bool
+            Whether to use oversampling.
+        n_splits : int
+            The number of splits.
+        random_state : int
+            The random state for the CV-split.
+        verbose_split : bool
+            Whether to print the split information.
+        """
         df_target = self.__get_df_target(
             qudata=qudata,
             quclst=quclst,
@@ -282,6 +329,32 @@ class QuScoresClassifier:
         random_state: int=42,
         verbose_split: bool=True,
     ) -> QuClassifierResults:
+        """Train-test the classifier with a random train-test-split (non-CV).
+
+        Parameters
+        ----------
+        qudata : QuData
+            The data to use.
+        quclst : QuScoreClusters
+            The cluster object, that can be used to provide the target data.
+            Only either `quclst` or `df_target` should be passed.
+        df_target : pd.DataFrame
+            The target data. Must be matchable via the ID-col.
+        df_strat : pd.DataFrame
+            The stratification data. Must be matchable via the ID-col.
+        strat_col : str
+            The column to stratify by.
+        stratify : bool
+            Whether to stratify.
+        oversample : bool
+            Whether to use oversampling.
+        test_size : float
+            The size of the test set.
+        random_state : int
+            The random state for the split.
+        verbose_split : bool
+            Whether to print the split information.
+        """
         df_target = self.__get_df_target(
             qudata=qudata,
             quclst=quclst,

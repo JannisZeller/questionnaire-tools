@@ -1,3 +1,10 @@
+"""
+# Scorer-Results-Regressor
+
+This is the main class for the regression-based prediction of subscale scores
+based on scorer-results.
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -26,6 +33,20 @@ class QuRegressorBase(ABC):
         append_total_score: bool=True,
         total_score_name: str="Total Score",
     ) -> None:
+        """Initializes a `QuRegressorBase` object. This is the base class
+        that can be used as a kernel of the [`QuScorerResultsRegressor`][qutools.scorer_results_regressor.QuScorerResultsRegressor]
+        wrapper
+
+        Parameters
+        ----------
+        qusubscales : list[QuSubscales]
+            A list of `QuSubscales` objects. Multiple subscales can be united
+            when using this object.
+        append_total_score : bool
+            Whether to append a total score to the subscales.
+        total_score_name : str
+            The name of the total score column.
+        """
         self.quconfig = qusubscales[0].quconfig.copy()
         self.id_col = self.quconfig.id_col
         self.task_cols = self.quconfig.get_task_names()
@@ -50,7 +71,7 @@ class QuRegressorBase(ABC):
         for qs in self.qusubs:
             self.subscale_cols += qs.get_subscales()
 
-    def summation_df_scr(self, df_scr: pd.DataFrame) -> pd.DataFrame:
+    def _summation_df_scr(self, df_scr: pd.DataFrame) -> pd.DataFrame:
         df_ret = df_scr[[self.quconfig.id_col]].copy()
         for qusub in self.qusubs:
             df_sub = qusub.apply_to_dataframe(df_scr=df_scr)
@@ -58,32 +79,82 @@ class QuRegressorBase(ABC):
         return df_ret
 
     def predict_qudata(self, qudata: QuData) -> pd.DataFrame:
+        """Predicts the subscale scores for a `QuData` object.
+
+        Parameters
+        ----------
+        qudata : QuData
+            A `QuData` object.
+        """
         df_scr = qudata.get_scr(mc_scored=True, verbose=False)
         return self.predict_df_scr(df_scr=df_scr)
 
     @abstractmethod
     def fit(self, df_trg: pd.DataFrame, df_prd: pd.DataFrame) -> None:
+        """Fits the model to the training data. The dataframes should contain
+        the target- and predicted scores for the different questionnaire tasks.
+        The predictions are made from the scoring model. The dataframes must be
+        matchable by the ID-column.
+
+        Parameters
+        ----------
+        df_trg : pd.DataFrame
+            The target data.
+        df_prd : pd.DataFrame
+            The prediction data.
+        """
         pass
 
     @abstractmethod
     def reset(self) -> None:
+        """Resets the model."""
         pass
 
     @abstractmethod
     def predict_df_scr(self, df_scr: pd.DataFrame) -> pd.DataFrame:
+        """Predicts the subscale scores for a dataframe of scoring results.
+
+        Parameters
+        ----------
+        df_scr : pd.DataFrame
+            A dataframe of scoring results.
+        """
         pass
 
 
 
 class QuRegressorSummation(QuRegressorBase):
     def fit(self, df_trg: pd.DataFrame, df_prd: pd.DataFrame) -> None:
+        """Fits the model to the training data. The dataframes should contain
+        the target- and predicted scores for the different questionnaire tasks.
+        The predictions are made from the scoring model. The dataframes must be
+        matchable by the ID-column.
+
+        For the summation model, there is no fitting necessary. The model is
+        simply based on the summation of the subscale scores.
+
+        Parameters
+        ----------
+        df_trg : pd.DataFrame
+            The target data.
+        df_prd : pd.DataFrame
+            The prediction data.
+        """
         pass
 
     def reset(self) -> None:
+        """Resets the model."""
         pass
 
     def predict_df_scr(self, df_scr: pd.DataFrame) -> pd.DataFrame:
-        return self.summation_df_scr(df_scr=df_scr)
+        """Predicts the subscale scores for a dataframe of scoring results.
+
+        Parameters
+        ----------
+        df_scr : pd.DataFrame
+            A dataframe of scoring results.
+        """
+        return self._summation_df_scr(df_scr=df_scr)
 
 
 
@@ -91,11 +162,26 @@ class QuRegressorLR(QuRegressorBase):
     kernels: list[LinearRegression] = []
 
     def fit(self, df_trg: pd.DataFrame, df_prd: pd.DataFrame) -> None:
-        if not (df_prd[self.id_col] == df_trg[self.id_col]).all():
+        """Fits the model to the training data. The dataframes should contain
+        the target- and predicted scores for the different questionnaire tasks.
+        The predictions are made from the scoring model. The dataframes must be
+        matchable by the ID-column.
+
+        For the linear regression model, a linear regression model is fitted
+        for each subscale score.
+
+        Parameters
+        ----------
+        df_trg : pd.DataFrame
+            The target data.
+        df_prd : pd.DataFrame
+            The prediction data.
+        """
+        if not (df_prd[self.id_col].values == df_trg[self.id_col].values).all():
             raise ValueError(
                 "The IDs of the passed score (~target)- and prediction-data are not equal."
             )
-        df_trg = self.summation_df_scr(df_scr=df_trg)
+        df_trg = self._summation_df_scr(df_scr=df_trg)
 
         for col in self.subscale_cols:
             y = df_trg[col].values
@@ -105,9 +191,22 @@ class QuRegressorLR(QuRegressorBase):
             self.kernels.append(lm)
 
     def reset(self) -> None:
+        """Resets the model by dereferencing all contained regression models."""
         self.kernels: list[LinearRegression] = []
 
     def predict_df_scr(self, df_scr: pd.DataFrame) -> pd.DataFrame:
+        """Predicts the subscale scores for a dataframe of scoring results.
+
+        Parameters
+        ----------
+        df_scr : pd.DataFrame
+            A dataframe of scoring results.
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe with the predicted subscale scores.
+        """
         df_ret = df_scr.copy()
         df_ret = df_ret[[self.id_col]]
         for idx, col in enumerate(self.subscale_cols):
@@ -116,8 +215,6 @@ class QuRegressorLR(QuRegressorBase):
             y = lm.predict(X=X)
             df_ret[col] = y
         return df_ret
-
-
 
 
 
@@ -132,6 +229,24 @@ class QuScorerResultsRegressor:
         append_total_score: bool=True,
         total_score_name: str="Total Score",
     ) -> None:
+        """Initializes a `QuScorerResultsRegressor` object. This is the main
+        class for the regression-based prediction of subscale scores based on
+        scorer-results.
+
+        Parameters
+        ----------
+        qusubs : QuSubscales|list[QuSubscales]
+            A `QuSubscales` object or a list of `QuSubscales` objects. Multiple
+            subscales can be united when using this object.
+        model : Literal["summation", "linear_regression"]|QuRegressorBase
+            The model to use for the regression. If a string is passed, the
+            model is initialized automatically. If a `QuRegressorBase` object
+            is passed, this object is used as the model.
+        append_total_score : bool
+            Whether to append a total score to the subscales.
+        total_score_name : str
+            The name of the total score column.
+        """
         if isinstance(qusubs, QuSubscales):
             self.qusubs = [qusubs]
         elif isinstance(qusubs, list):
@@ -198,6 +313,14 @@ class QuScorerResultsRegressor:
 
 
     def fit(self, qusr: QuScorerResults) -> QuRegressionResults:
+        """Fits the model to the training data. The necessary target-data and
+        scorer-predictions are extracted out of the [`QuScorerResults`][qutools.scoring.scorer_results.QuScorerResults]-object.
+
+        Parameters
+        ----------
+        qusr : QuScorerResults
+            A `QuScorerResults` object.
+        """
         df_prd = qusr.get_wide_predictions(mc_units="mc_tasks")
         df_trg = qusr.get_wide_targets(mc_units="mc_tasks")
 
@@ -246,7 +369,7 @@ class QuScorerResultsRegressor:
         df_targets = df_targets.drop(columns=["split", "mode"])
         df_targets = df_targets.sort_values(by=[qusr.id_col])
         df_targets = df_targets.reset_index(drop=True)
-        df_targets = self.model.summation_df_scr(df_scr=df_targets)
+        df_targets = self.model._summation_df_scr(df_scr=df_targets)
 
         return QuRegressionResults(
             quconfig=qusr.quconfig,

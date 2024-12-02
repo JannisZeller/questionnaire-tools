@@ -121,8 +121,7 @@ def plot_sankey(
         title: str="title",
     ) -> plotlyfig:
     """Wrapper to plot a sankey plot for longitudinal (like) data.
-    It returns the plotly figure as an object, which can be saved
-    to html format using [save_plotlyfig][src.plotly_save.save_plotlyfig].
+    It returns the plotly figure as an object.
 
     Parameters
     ----------
@@ -197,12 +196,10 @@ def plot_sankey_wrapper(
     ) -> plotlyfig:
     """Wrapper for directly creating sankey plots with plotly out of dataframes
     with one column per timestamp and one row per instance. It mainly
-    combines [df_to_sankey_data][src.score_cluster.plot.df_to_sankey_data]
-    and [plot_sankey][src.score_cluster.plot.plot_sankey] but adds automatic
+    combines [df_to_sankey_data][qutools.core.sankey_plotly.df_to_sankey_data]
+    and [plot_sankey][qutools.core.sankey_plotly.plot_sankey] but adds automatic
     color generations and options wether to (not) inlude dropout in different
     ways.
-    It returns the plotly figure as an object, which can be saved
-    to html format using [save_plotlyfig][src.plotly_save.save_plotlyfig].
 
     Parameters
     ----------

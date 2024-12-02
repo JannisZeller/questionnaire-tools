@@ -1,3 +1,12 @@
+"""
+# Scorer-Results-Classifier Results
+
+This is the last layer of the 2-step classification pipeline. It is used to
+store the predictions and fit-histories of the the [QuScorerResultsClassifier][qutools.scorer_results_classifier.sr_classifier.QuScorerResultsClassifier]
+objects for evaluation.
+"""
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -40,6 +49,27 @@ class QuSRClassifierResults:
         prediction_col: str="cluster_pred",
         class_order: list[str]=None,
     ) -> None:
+        """The `QuSRClassifierResults`-class is used to store the predictions and
+        fit-histories of the the [QuScorerResultsClassifier][qutools.scorer_results_classifier.sr_classifier.QuScorerResultsClassifier]
+        objects for evaluation. It is produced by the fit-methods of the classifiers.
+
+        Parameters
+        ----------
+        quconfig : QuConfig
+            The configuration of the Qu-Classifier.
+        df_preds : pd.DataFrame
+            The predictions of the classifier.
+        df_fit_histories : pd.DataFrame
+            The fit-histories of the classifier.
+        id_split : IDsKFoldSplit
+            The ID-split used for the cross-validation.
+        target_col : str
+            The name of the target-column.
+        prediction_col : str
+            The name of the prediction-column.
+        class_order : list[str]
+            The order of the classes in the confusion matrix.
+        """
         self.quconfig = quconfig
 
         self.id_col = quconfig.id_col
@@ -109,6 +139,18 @@ class QuSRClassifierResults:
         df_tst: pd.DataFrame=None,
         fit_history: dict=None,
     ):
+        """Appends new predictions and fit-histories to the instance. Typically
+        used in the cross-validation loop.
+
+        Parameters
+        ----------
+        df_trn : pd.DataFrame
+            The training predictions to append.
+        df_tst : pd.DataFrame
+            The test predictions to append.
+        fit_history : dict
+            The fit-history to append.
+        """
         n_split = self.get_n_splits() + 1
 
         if df_trn is not None:
@@ -192,6 +234,14 @@ class QuSRClassifierResults:
         return class_order
 
     def get_df(self) -> pd.DataFrame:
+        """Returns the predictions as a dataframe as a deepcopy.
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        if self.df_preds is None:
+            raise AttributeError("No prediction data available.")
         return self.df_preds.copy()
 
     def __get_vals(
@@ -247,13 +297,21 @@ class QuSRClassifierResults:
         splitwise: bool=False,
         mode: Literal["train", "test"]="test",
     ) -> None:
+        """Evaluation of the predictions, i.e., prints performance metrics.
+
+        Parameters
+        ----------
+        splitwise : bool
+            Wether to evaluate the predictions splitwise.
+        mode : Literal["train", "test"]
+            Wether to evaluate train or test predictions.
+        """
         mode = self.__validate_eval_mode(mode=mode)
 
         if not splitwise:
             self._evaluate(mode=mode)
         else:
             self._evaluate_splitwise(mode=mode)
-
 
     def _evaluate(
         self,
@@ -312,6 +370,12 @@ class QuSRClassifierResults:
         ----------
         mode : Literal["train", "test"]
             Wether to evaluate train or test predictions
+        class_order : list
+            The order of the classes in the confusion matrix. If `None` the
+            order of the classes is determined by the order of the unique values
+            in the target-column.
+        label_true_pred : bool
+            Wether to label the columns and rows with "_true" and "_pred".
 
         Returns
         -------
@@ -354,6 +418,24 @@ class QuSRClassifierResults:
         save_path: str=None,
         **kwargs,
     ) -> Figure:
+        """Plots the confusion matrix of the classification.
+
+        Parameters
+        ----------
+        mode : Literal["train", "test"]
+            Wether to evaluate train or test predictions
+        class_order : list
+            The order of the classes in the confusion matrix. If `None` the
+            order of the classes is determined by the order of the unique values
+            in the target-column.
+        save_path : str
+            A path to save the plot to. If `None` the plot will not be saved.
+
+        Returns
+        -------
+        Figure
+            The plot as a `matplotlib.figure.Figure`.
+        """
         mat = self.get_confusion_matrix(
             mode=mode,
             class_order=class_order,
@@ -373,6 +455,7 @@ class QuSRClassifierResults:
         _ = ax.set_xlabel(kwargs.get("xlabel", 'Vorhergesagte Cluster'))
         _ = ax.set_ylabel(kwargs.get("ylabel", 'Wahre Cluster'))
         _ = ax.tick_params(axis='x', rotation=kwargs.get("x_tick_rotation", 30))
+        _ = ax.set_title(kwargs.get("title", None))
 
         if save_path is not None:
             plt.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -550,3 +633,133 @@ class QuSRClassifierResults:
         )
 
         return qcv
+
+
+    @staticmethod
+    def qusr_clf_performance_table(
+        qusr_clfs: dict[str, "QuSRClassifierResults"],
+        mode: str = "test",
+        labels: list[str]=None,
+    ) -> pd.DataFrame:
+        """Generates a table to compare the performance of different classifiers.
+
+        Parameters
+        ----------
+        qusr_clfs : dict[str, QuSRClassifierResults]
+            The classifiers to compare.
+        mode : str
+            Wether to evaluate train or test predictions.
+        labels : list[str]
+            The labels to use for the models.
+
+        Returns
+        -------
+        pd.DataFrame
+            The table as a `pandas.DataFrame`.
+        """
+        return _qusr_clf_performance_table(qusr_clfs, mode=mode, labels=labels)
+
+    @staticmethod
+    def qusr_clf_performance_plot(
+        qusr_clfs: dict[str, "QuSRClassifierResults"],
+        mode: str = "test",
+        labels: list[str]=None,
+        **kwargs,
+    ) -> Figure:
+        """Generates a plot to compare the performance of different classifiers.
+
+        Parameters
+        ----------
+        qusr_clfs : dict[str, QuSRClassifierResults]
+            The classifiers to compare.
+        mode : str
+            Wether to evaluate train or test predictions.
+        labels : list[str]
+            The labels to use for the models.
+
+        Returns
+        -------
+        Figure
+            The plot as a `matplotlib.figure.Figure`.
+        """
+        return _qusr_clf_performance_plot(qusr_clfs, mode=mode, labels=labels, **kwargs)
+
+
+
+
+def _qusr_clf_performance_table(
+        qusr_clfs: dict[str, QuSRClassifierResults],
+        mode: str = "test",
+        labels: list[str]=None,
+    ) -> pd.DataFrame:
+
+    dct = {}
+    for key in qusr_clfs.keys():
+        y_true = qusr_clfs[key]._get_trgts(mode=mode)
+        y_pred = qusr_clfs[key]._get_preds(mode=mode)
+        dct[key] = {
+            "Accuracy": accuracy_score(y_true, y_pred),
+            "F1 (weighted)": f1_score(y_true, y_pred, average="weighted"),
+            "F1 (macro)": f1_score(y_true, y_pred, average="macro"),
+            "Cohens Kappa": cohen_kappa_score(y_true, y_pred),
+            "Quadratic Weighted Kappa": cohen_kappa_score(y_true, y_pred, weights="quadratic"),
+        }
+
+    df = pd.DataFrame(dct, columns=qusr_clfs.keys()).T
+    df["Model"] = df.index
+    df = df.reset_index(drop=True)
+
+    if labels:
+        df["Model"] = df["Model"].replace(qusr_clfs.keys(), labels)
+
+    df = df[["Model", "Accuracy", "F1 (weighted)", "F1 (macro)", "Cohens Kappa", "Quadratic Weighted Kappa"]]
+
+    return df
+
+
+def _qusr_clf_performance_plot(
+    qusr_clfs: dict[str, QuSRClassifierResults],
+    mode: str = "test",
+    labels: list[str]=None,
+    **kwargs,
+) -> Figure:
+    n_comparisons = len(qusr_clfs)
+    df = _qusr_clf_performance_table(qusr_clfs, mode=mode, labels=labels)
+    df = df.drop(columns=["Quadratic Weighted Kappa", "F1 (macro)"])
+    df = pd.melt(df, id_vars="Model", var_name="metric", value_name="value")
+
+    fig: Figure
+    ax: Axes
+    fig, ax = plt.subplots(figsize=kwargs.get("figsize", (3 * n_comparisons, 6)))
+    sns.barplot(
+        data=df,
+        x="metric",
+        y="value",
+        hue="Model",
+        palette=kwargs.get("palette", None),
+        ax=ax,
+    )
+    ax.set_title(kwargs.get("title", f"Performance Comparison Models"))
+    ax.set_xlabel(kwargs.get("xlabel", "Metric"))
+    ax.set_ylabel(kwargs.get("ylabel", "Metric Value"))
+    ax.set_ylim(bottom=kwargs.get("ylim_bottom", 0), top=kwargs.get("ylim_top", 1))
+
+    if kwargs.get("outline", True):
+        for bar in ax.patches:
+            bar.set_edgecolor("black")
+            bar.set_linewidth(1.5)
+
+    if kwargs.get("annotate", True):
+        for container in ax.containers:
+            ax.bar_label(container, fmt="%.2f")
+
+    if "legend_loc" in kwargs:
+        _ = ax.legend(
+            loc=kwargs.get("legend_loc", 'center left'),
+            bbox_to_anchor=kwargs.get("legend_anchor", None),
+        )
+
+    else:
+        _ = ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
+    return fig

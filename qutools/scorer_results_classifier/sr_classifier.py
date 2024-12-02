@@ -1,4 +1,13 @@
-import numpy as np
+"""
+# Scorer-Results-Classifier
+
+This class is used to perform booklet-wise classifications based on the results
+of a task-wise scoring model. It is used to operate on the predictions of such a
+scorer for training- and test-data for a data-leakage-free evaluation of
+the downstream classification task.
+"""
+
+
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
@@ -6,7 +15,6 @@ from typing import Literal
 from tqdm import tqdm
 
 from ..data.data import QuData
-# from ..data.interrater_data import QuInterraterData
 
 from ..clustering.clusters import QuScoreClusters
 
@@ -33,6 +41,20 @@ class QuScorerResultsClassifier:
         omit_classes: list=None,
         **kwargs,
     ) -> None:
+        """Initializes the QuScorerResultsClassifier object.
+
+        Parameters
+        ----------
+        model : Classifier
+            The classifier model to use. In the `None`-default case, a
+            logistic regression model is used.
+        target_name : str
+            The name of the target column in the data.
+        feature_names : list
+            The names of the feature columns in the data.
+        omit_classes : list
+            The classes to omit from the data.
+        """
         self.target = target_name
         self.pred = target_name + "_pred"
         self.features = feature_names
@@ -284,11 +306,30 @@ class QuScorerResultsClassifier:
         self,
         qusr: QuScorerResults,
         targets: pd.DataFrame|QuScoreClusters,
-        teacher_force_prop: float=0, # TODO:
+        teacher_force_prop: float=0,
         oversample: bool=False,
         include_mc_only: bool=True,
         **kwargs,
     ) -> QuSRClassifierResults:
+        """Fit the classifier model on the scorer results. The model is trained
+        on the training-predictions and evaluated on the test-predictions
+        of the scorer.
+
+        Parameters
+        ----------
+        qusr : QuScorerResults
+            The scorer results to use for the classification.
+        targets : pd.DataFrame|QuScoreClusters
+            The target data to use for the classification. This can be a
+            DataFrame with the target values or a QuScoreClusters object.
+        teacher_force_prop : float
+            The proportion of teacher forcing to use for the training-data.
+        oversample : bool
+            Whether to use oversampling for the training-data.
+        include_mc_only : bool
+            Whether to include the multiple-choice-only test-edits in the
+            classification.
+        """
         full_train_fit = QuScorerResultsClassifier._get_train_only_mode(qusr=qusr)
         if oversample:
             print("Using oversampling.")
@@ -361,6 +402,22 @@ class QuScorerResultsClassifier:
         include_mc_only: bool=True,
         **kwargs,
     ) -> QuSRClassifierResults:
+        """Evaluate a fixed classifier model or set of models on the scorer results.
+        This model can be a cluster model set up earlier or alike.
+
+        Parameters
+        ----------
+        models : list[Classifier]|Classifier
+            The classifier model(s) to evaluate.
+        qusr : QuScorerResults
+            The scorer results to use for the classification.
+        targets : pd.DataFrame|QuScoreClusters
+            The target data to use for the classification. This can be a
+            DataFrame with the target values or a QuScoreClusters object.
+        include_mc_only : bool
+            Whether to include the multiple-choice-only test-edits in the
+            evaluation.
+        """
         full_train_fit = QuScorerResultsClassifier._get_train_only_mode(qusr=qusr)
 
         if not isinstance(models, list):

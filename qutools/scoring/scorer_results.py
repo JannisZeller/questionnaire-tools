@@ -166,7 +166,7 @@ class QuScorerResults:
         Returns
         -------
         int
-            Number of test/validation-samples in the instance.
+            Number of test/validation-samples meaning Answer-Score-Pairs in the instance.
         """
         if self.df_preds is None:
             return 0
@@ -394,7 +394,8 @@ class QuScorerResults:
                 df_ids = self.id_split.df_ids.copy()
                 df_miss_tst = df_miss_tst.merge(df_ids[["ID", "split"]])
             else:
-                df_miss_tst["split"] = np.random.choice(split_ids, n_miss)
+                n_splits = len(split_ids)
+                df_miss_tst["split"] = [split_ids[x % n_splits] for x in range(n_miss)] # np.random.choice(split_ids, n_miss)
 
             df_miss_trn = []
             for _, row in df_miss_tst.iterrows():
@@ -424,6 +425,7 @@ class QuScorerResults:
     ) -> pd.DataFrame:
         mc_itemnames = self.quconfig.get_mc_item_names()
         text_task_cols = self.quconfig.get_text_columns("tasks")
+
         if not omit_mc:
             if len(mc_itemnames) > 0:
                 if not self.qudata.mc_item_scores_available() and mc_units == "mc_items":
@@ -443,12 +445,31 @@ class QuScorerResults:
                     mc_cols: list[str]=self.quconfig.get_mc_task_names()
                     all_task_cols: list[str]=self.quconfig.get_scores_columns("mc_tasks")
 
+
+
         if mode == "target":
             value_cols = self.target_col
+
         elif mode == "prediction":
             value_cols = self.prediction_col
 
         df_ret = self.df_preds
+        if mode == "target":
+            df_targets = self.qudata.get_scr(mc_scored=True, verbose=False)
+            df_targets = df_targets.melt(
+                id_vars=self.id_col,
+                value_vars=text_task_cols,
+                var_name=self.unit_col,
+                value_name=value_cols,
+            )
+            df_targets = df_targets.reset_index(drop=True)
+            df_ret = df_ret.drop(columns=value_cols)
+            df_ret = df_ret.merge(
+                right=df_targets,
+                on=[self.id_col, self.unit_col],
+                how="left",
+            )
+
         index_cols = [self.quconfig.id_col, "mode", "split"]
         df_ret = pivot_to_wide(
             df=df_ret,
@@ -525,7 +546,9 @@ class QuScorerResults:
         mode: Literal["train", "test"]="test",
         evaluate_na_filled: bool=True,
     ) -> None:
-        """Evaluation of the text-tasks only.
+        """Evaluation of the text-tasks only. Note, that if sparingly occurring
+        scores are clipped in the QuData used for training, the clipped scores
+        will also *not* be included in the evaluation on the scores-level.
 
         Parameters
         ----------
@@ -559,7 +582,9 @@ class QuScorerResults:
         include_mc_only: bool=False,
     ) -> None:
         """Evaluation combining questionnaire text-task predictions and
-        multiple choice-tasks.
+        multiple choice-tasks. Note, that if sparingly occurring
+        scores are clipped in the QuData used for training, the clipped scores
+        will also *not* be included in the evaluation on the scores-level.
 
         Parameters
         ----------
@@ -594,7 +619,7 @@ class QuScorerResults:
     def evaluation(
         self,
         mode: Literal["train", "test"]="test",
-        include_mc_only: bool=False,
+        include_mc_only: bool=True,
         evaluate_na_filled: bool=True,
     ) -> None:
         """Prints a verbose evaluation of the test/validation predictions in 3
@@ -604,6 +629,10 @@ class QuScorerResults:
         3. Evaluation together with the MC-tasks with threshold-scoring.
         The scores table is optional, if there are no multiple choice tasks in
         the contained qudata.
+
+        Note, that if sparingly occurring
+        scores are clipped in the QuData used for training, the clipped scores
+        will also *not* be included in the evaluation on the scores-level.
 
         Parameters
         ----------
@@ -832,9 +861,10 @@ class QuScorerResults:
         df = df[df["mode"]==mode].reset_index(drop=True)
         df_pred = df[text_task_cols].copy()
 
-        too_large_pctg = 100. * np.mean(df_pred.values > txt_max_scores)
+        too_large_sum = np.sum(df_pred.values > txt_max_scores)
+        too_large_pctg = too_large_sum / self.get_test_n() * 100
         print(f"Scores Larger than possible ({mode})")
-        print(f" - {too_large_pctg:.2f} %")
+        print(f" - {too_large_sum}  (i.e., {too_large_pctg:.4f} % of all Answer-Score-Pairs)")
 
     def _evaluate_with_mc_tasks(
         self,
@@ -926,6 +956,7 @@ class QuScorerResults:
         sns.heatmap(mat_rnormed, cmap="mako", annot=labels, fmt="", ax=ax) # annot=True, fmt=".0f"
         _ = ax.set_xlabel(kwargs.get("xlabel", 'Vorhergesagte Scores'))
         _ = ax.set_ylabel(kwargs.get("ylabel", 'Wahre Scores'))
+        _ = ax.set_title(kwargs.get("title", None))
 
         if save_path is not None:
             plt.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -1008,6 +1039,7 @@ class QuScorerResults:
         if test_history_available:
             sns.lineplot(df_fh_tst, x="epoch", y="eval_loss", errorbar="sd", color="royalblue", ax=ax1)
         sns.lineplot(df_fh_trn, x="epoch", y="loss", errorbar="sd", color="black", linestyle="--", ax=ax1)
+        _ = ax1.set_title(kwargs.get("title", None))
 
         if test_history_available:
             ax2 = plt.twinx()
@@ -1021,7 +1053,10 @@ class QuScorerResults:
             h2 = Line2D([0], [0], label=kwargs.get("trn_loss_legend", "Loss (Train.)"), color='black', linestyle="--")
             h3 = Line2D([0], [0], label=kwargs.get("evl_acc_legend", "Accuracy (Val.)"), color='orangered')
             hs = [h1, h2, h3]
-            _ = ax1.legend(handles=hs, loc='center left', bbox_to_anchor=(1.15, 0.5))
+            if "legend_loc" not in kwargs:
+                _ = ax1.legend(handles=hs, loc='center left', bbox_to_anchor=(1.15, 0.5))
+            else:
+                _ = ax1.legend(handles=hs, loc=kwargs.get("legend_loc"), bbox_to_anchor=kwargs.get("legend_bbox", None))
 
         if save_path is not None:
             plt.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -1077,24 +1112,6 @@ class QuScorerResults:
         print(f" - Cohens Kappa  = {diff_dct['cohens_kappa']:.3f}  ({self_dct['cohens_kappa']:.3f} vs. {othr_dct['cohens_kappa']:.3f})")
         print(f" - Quadratic Weighted Kappa = {diff_dct['quadratic_weighted_kappa']:.3f}  ({self_dct['quadratic_weighted_kappa']:.3f} vs. {othr_dct['quadratic_weighted_kappa']:.3f})")
 
-        df = pd.DataFrame(dct, index=labels).reset_index(names="labels")
-        df = df[["labels", "acc", "f1_weighted", "f1_macro", "cohens_kappa", "quadratic_weighted_kappa"]]
-        df.columns = ["Models", "Accuracy", "F1 (weighted)", "F1 (macro)", "Cohens Kappa", "Quadratic Weighted Kappa"]
-        df = df.melt(id_vars="Models", var_name="metric", value_name="value")
-
-        fig: Figure
-        ax: Axes
-        fig, ax = plt.subplots(figsize=(8, 6))
-        sns.barplot(df, x="metric", y="value", hue="Models", ax=ax)
-        ax.set_title(kwargs.get("title", f"Performance Comparison {labels[0]} vs. {labels[1]}"))
-        ax.set_xlabel(kwargs.get("xlabel", "Metric"))
-        ax.set_ylabel(kwargs.get("ylabel", "Metric Value"))
-        ax.set_ylim(bottom=kwargs.get("ylim_bottom", 0), top=kwargs.get("ylim_top", 1))
-        _ = ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
-
-        return fig
-
-
 
     ## IO
     def __settings_dict(self) -> dict:
@@ -1108,7 +1125,7 @@ class QuScorerResults:
     def to_dir(
         self,
         path: str,
-        store_qdata: bool=True,
+        store_qudata: bool=True,
         allow_empty_preds: bool=False,
     ) -> None:
         """Saves the data to a directory. Overwrites possible existing files
@@ -1118,7 +1135,7 @@ class QuScorerResults:
         ----------
         path : str
             The directory to save the data to.
-        store_qdata : bool
+        store_qudata : bool
             Wether to store the internal `QuData`-object alongside the predictions.
             If this is not used, the QuData-object must be passed when loading the
             data again.
@@ -1150,7 +1167,7 @@ class QuScorerResults:
         if self.id_split is not None:
             self.id_split.to_dir(dir_ / "id_split")
 
-        if store_qdata:
+        if store_qudata:
             self.qudata.to_dir(dir_ / "qudata")
 
         with open(dir_ / "settings.json", "w") as f:
@@ -1177,6 +1194,9 @@ class QuScorerResults:
         """
         p = Path(path)
         path_suffix_warning(p.suffix)
+
+        if not p.exists():
+            raise FileNotFoundError(f"Directory \"{p}\" to load some QuScorerResults does not exist.")
 
         if (p / "qudata").exists():
             if qudata is not None:
@@ -1237,3 +1257,85 @@ class QuScorerResults:
                 qusr.__validate_long_df_preds(df_tst)
 
         return qusr
+
+
+    @staticmethod
+    def qusrs_performance_table(
+        qusrs: dict[str, "QuScorerResults"],
+        mode: str = "test",
+        labels: list[str]=None,
+    ) -> pd.DataFrame:
+        return qusrs_performance_table(qusrs, mode=mode, labels=labels)
+
+    @staticmethod
+    def qusrs_performance_plot(
+        qusrs: dict[str, "QuScorerResults"],
+        mode: str = "test",
+        labels: list[str]=None,
+        **kwargs,
+    ) -> pd.DataFrame:
+        return qusrs_performance_plot(qusrs, mode=mode, labels=labels, **kwargs)
+
+
+
+
+
+def qusrs_performance_table(
+        qusrs: dict[str, QuScorerResults],
+        mode: str = "test",
+        labels: list[str]=None,
+    ) -> pd.DataFrame:
+
+    dct = {}
+    for key in qusrs.keys():
+        dct[key] = qusrs[key]._get_text_task_evaluation(mode=mode)
+
+    df = pd.DataFrame(dct, columns=qusrs.keys()).T
+    df["model"] = df.index
+    df = df.reset_index(drop=True)
+
+    if labels:
+        df["model"] = df["model"].replace(qusrs.keys(), labels)
+
+    df = df.loc[:, ["model", "acc", "f1_weighted", "f1_macro", "cohens_kappa", "quadratic_weighted_kappa"]]
+    df.columns = ["Model", "Accuracy", "F1 (weighted)", "F1 (macro)", "Cohens Kappa", "Quadratic Weighted Kappa"]
+
+    return df
+
+
+def qusrs_performance_plot(
+    qusrs: dict[str, QuScorerResults],
+    mode: str = "test",
+    labels: list[str]=None,
+    **kwargs,
+) -> pd.DataFrame:
+    n_comparisons = len(qusrs)
+    df = qusrs_performance_table(qusrs, mode=mode, labels=labels)
+    df = df.drop(columns=["Quadratic Weighted Kappa", "F1 (macro)"])
+    df = pd.melt(df, id_vars="Model", var_name="metric", value_name="value")
+    fig: Figure
+    ax: Axes
+    fig, ax = plt.subplots(figsize=kwargs.get("figsize", (3 * n_comparisons, 6)))
+    sns.barplot(
+        data=df,
+        x="metric",
+        y="value",
+        hue="Model",
+        palette=kwargs.get("palette", None),
+        ax=ax,
+    )
+    ax.set_title(kwargs.get("title", f"Performance Comparison Models"))
+    ax.set_xlabel(kwargs.get("xlabel", "Metric"))
+    ax.set_ylabel(kwargs.get("ylabel", "Metric Value"))
+    ax.set_ylim(bottom=kwargs.get("ylim_bottom", 0), top=kwargs.get("ylim_top", 1))
+    if kwargs.get("annotate", True):
+        for container in ax.containers:
+            ax.bar_label(container, fmt="%.2f")
+    if "legend_loc" in kwargs:
+        _ = ax.legend(
+            loc=kwargs.get("legend_loc", 'center left'),
+            bbox_to_anchor=kwargs.get("legend_anchor", None),
+        )
+    else:
+        _ = ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    return fig

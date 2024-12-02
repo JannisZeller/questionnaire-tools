@@ -335,7 +335,7 @@ class QuData:
 
     ## Retrieval and Transformations
     def __sos_clip(self):
-        df = self.df_scr.drop(columns=self.id_col)
+        df = self.get_scr(mc_scored=True, verbose=False).drop(columns=self.id_col)
         values = df.fillna(0).values.flatten()
         v_counts = dict(zip(*np.unique(values, return_counts=True)))
         v_total = np.sum(list(v_counts.values()))
@@ -358,6 +358,8 @@ class QuData:
         )
         if self.verbose:
             print(self._sos_info_str)
+
+        df = self.df_scr.drop(columns=self.id_col)
         df = df.replace(clip_dict).reset_index(drop=True)
         df_ids = self.df_scr[self.id_col].copy().reset_index(drop=True)
         df = pd.concat([df_ids, df], axis=1)
@@ -428,8 +430,10 @@ class QuData:
 
     def get_n_classes(self) -> int:
         self.__df_scr_exists()
-        max_scores = list(self.quconfig.get_max_scores().values())
-        return max(max_scores) + 1
+        text_cols = self.quconfig.get_text_columns("tasks")
+        df_scr = self.get_scr(mc_scored=True, verbose=False)
+        X_scr = df_scr[text_cols].to_numpy().flatten()
+        return int(max(X_scr) + 1)
 
     def get_scr_dropout(
         self,
@@ -476,6 +480,7 @@ class QuData:
         table: Literal["wide", "long"]=None,
         with_scores: bool=False,
         sep: str=" ",
+        verbose: bool=True,
     ) -> pd.DataFrame:
         """Returns the text-responses in different formats.
 
@@ -493,6 +498,8 @@ class QuData:
             required.
         with_scores : bool
             Wether the scores should be appended in an additional column.
+        verbose : bool
+            Whether information on the scoring procedure should be printed.
 
         Returns
         -------
@@ -547,7 +554,7 @@ class QuData:
             txt_ids = list(df_ret[self.id_col].unique())
             scr_ids = list(self.df_scr[self.id_col])
             mismatch = np.setdiff1d(scr_ids, txt_ids)
-            if len(mismatch) > 0:
+            if len(mismatch) > 0 and verbose:
                 print(
                     "Info: There are persons/test edits without any valid text-responses, which will not \n" +
                     "\tbe included in the `.get_txt(...)`-method's result:\n" +

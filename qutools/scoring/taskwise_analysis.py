@@ -186,16 +186,16 @@ class QuTextTaskAnalysis:
 
         ylabel = kwargs.get("ylabel", ylabel)
         ax1.set_ylabel(ylabel, size=12)
-        xlabel_top = kwargs.get("xlabel_top", '$N$ Responses')
-        ax1.set_xlabel(xlabel_top, color="black", size=12)
+        xlabel_bottom = kwargs.get("xlabel_bottom", '$N$ Responses')
+        ax1.set_xlabel(xlabel_bottom, color="black", size=12)
         ax1.scatter(ns, perf, color="black")
         sns.lineplot(x=ns, y=perf, c="black")
         ax1.tick_params(axis='y', labelcolor="black")
         ax1.tick_params(axis="both", labelsize=11)
 
         ax2 = ax1.twiny()
-        xlabel_bottom = kwargs.get("xlabel_bottom", "Skewness")
-        ax2.set_xlabel(xlabel_bottom, color="tab:blue", size=12)
+        xlabel_top = kwargs.get("xlabel_top", "Skewness")
+        ax2.set_xlabel(xlabel_top, color="tab:blue", size=12)
         ax2.scatter(skews, perf, color="tab:blue")
         sns.lineplot(x=skews, y=perf, c="tab:blue", ax=ax2)
         ax2.tick_params(axis='x', labelcolor="tab:blue")
@@ -211,6 +211,7 @@ class QuTextTaskAnalysis:
         h2 = mpatches.Patch(color='tab:blue', label=legend_skew_label)
         legend_position = kwargs.get("legend_position", (0.075, -0.15))
         fig.legend(handles=[h1, h2], fontsize=12, bbox_to_anchor=legend_position, loc='lower left')
+
 
         if save_path is not None:
             plt.savefig(save_path, bbox_inches="tight", dpi=300)
@@ -269,10 +270,12 @@ class QuTextTaskAnalysis:
         ax1.scatter(accs2, accs1, color="black")
         sns.regplot(x=accs2, y=accs1, color="black", ax=ax1)
         for it, x, y in zip(its, accs2, accs1):
-            ax1.annotate(it, (x+0.005, y+0.005))
+            ax1.annotate(
+                it, (x+0.005, y+0.005),
+                fontsize=kwargs.get("annotate_fontsize", None),
+            )
         ax1.set_xlabel(xlabel, size=12)
         ax1.set_ylabel(ylabel, color="black", size=12)
-        ax1.grid()
         ax1.tick_params(axis="both", labelsize=11)
 
         ax2.set_title("Cohens $\\kappa$", fontsize=14)
@@ -284,8 +287,10 @@ class QuTextTaskAnalysis:
         ax2.set_xlabel(xlabel, size=12)
         ax2.set_ylabel(ylabel, size=12)
         for it, x, y in zip(its, ks2, ks1):
-            ax2.annotate(it, (x+0.007, y+0.007))
-        ax2.grid()
+            ax2.annotate(
+                it, (x+0.007, y+0.007),
+                fontsize=kwargs.get("annotate_fontsize", None),
+            )
         ax2.tick_params(axis="both", labelsize=11)
 
         fig.tight_layout()

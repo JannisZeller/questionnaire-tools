@@ -183,7 +183,6 @@ class LinearModel:
         w_err = w_cov.diagonal()**0.5
         Tw = w / w_err
         pw = stats.t.sf(np.abs(Tw), dof) * 2
-        dw = w / w_err
         gap = np.abs(stats.t.isf(1 - alpha_ci/2, dof)) * w_err
         w_low = w - gap
         w_high = w + gap
@@ -205,7 +204,6 @@ class LinearModel:
         self.stats["rsq"] = R_sq
         self.stats["coef-t"] = Tw
         self.stats["coef-p"] = pw
-        self.stats["coef-cohen-d"] = dw
         self.stats["coef-lower-ci"] = w_low
         self.stats["coef-upper-ci"] = w_high
         self.stats["alpha-ci"] = alpha_ci
@@ -233,7 +231,6 @@ class LinearModel:
             "Std. Error": self.coef_err,
             "T": self.stats["coef-t"],
             "P > |T|": self.stats["coef-p"],
-            "Cohen d": self.stats["coef-cohen-d"],
             'lower': self.stats["coef-lower-ci"],
             'upper': self.stats["coef-upper-ci"],
         }, index=self.features)

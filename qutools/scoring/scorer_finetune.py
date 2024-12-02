@@ -374,18 +374,20 @@ class QuFinetuneScorer(QuScorer):
     def _get_df_trn(
         qudata: QuData,
         verbose: bool=False,
+        item_task_prefix: bool=True,
         it_repl_dict: dict=None,
         sep: str=" [SEP] ",
         add_scores: bool=True,
     ) -> pd.DataFrame:
-        df_txt = qudata.get_txt(units="tasks", table="long", with_scores=add_scores)
-        df_trn = set_item_task_prefix(
-            df_txt=df_txt,
-            unit_col="task",
-            it_repl_dict=it_repl_dict,
-            sep=sep,
-            verbose=verbose,
-        )
+        df_trn = qudata.get_txt(units="tasks", table="long", with_scores=add_scores)
+        if item_task_prefix:
+            df_trn = set_item_task_prefix(
+                df_txt=df_txt,
+                unit_col="task",
+                it_repl_dict=it_repl_dict,
+                sep=sep,
+                verbose=verbose,
+            )
         return df_trn.reset_index(drop=True)
 
     @staticmethod
@@ -858,6 +860,7 @@ class QuFinetuneScorer(QuScorer):
         df_trn = QuFinetuneScorer._get_df_trn(
             qudata=qudata,
             verbose=self.verbose,
+            item_task_prefix=self.item_task_prefix,
             it_repl_dict=self.it_repl_dict,
             sep=self.sep,
         )
@@ -1222,6 +1225,7 @@ class QuFinetuneScorer(QuScorer):
         df_trn = QuFinetuneScorer._get_df_trn(
             qudata=qudata,
             verbose=self.verbose,
+            item_task_prefix=self.item_task_prefix,
             it_repl_dict=self.it_repl_dict,
             sep=self.sep,
         )
@@ -1303,6 +1307,7 @@ class QuFinetuneScorer(QuScorer):
         quconfig = qudata.quconfig
         df_txt = QuFinetuneScorer._get_df_trn(
             qudata=qudata,
+            item_task_prefix=self.item_task_prefix,
             it_repl_dict=self.it_repl_dict,
             verbose=self.verbose,
             add_scores=False,
@@ -1436,8 +1441,9 @@ class QuFinetuneScorer(QuScorer):
                         path=dir_ / "pretrained_language_model",
                         num_labels=self.num_labels
                     )
-                except OSError:
-                    pass
+                except ValueError:
+                    rmtree(dir_ / "pretrained_language_model")
+                    print("Did not find a stored `pretrained_language_model`.")
             rmtree(dir_)
             dir_.mkdir(parents=True)
             if qusr is not None:

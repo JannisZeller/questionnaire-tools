@@ -7,7 +7,6 @@ subscales.
 from .config import QuConfig
 from .data import QuData
 from .subscales import QuSubscales
-from .id_splits import IDsKFoldSplit, IDsTrainTestSplit
 from .embeddings import (
     EmbeddingModel,
     SentenceTransformersEmbdModel,

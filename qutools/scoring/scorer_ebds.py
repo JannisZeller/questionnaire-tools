@@ -126,6 +126,7 @@ class QuEmbeddingScorer(QuScorer):
         oversample: bool=False,
         validate_scores: Literal["none", "warn", "error"]="none",
         save_path: str=None,
+        supress_not_saving_warning: bool=False,
     ) -> QuScorerResults:
         """Wrapper to evaluate a model based on the evaluation-`IDsSplit`-object
         passed.
@@ -150,6 +151,8 @@ class QuEmbeddingScorer(QuScorer):
         save_path : str
             The path to save the results of the evaluation. If not passed, the results
             are not stored, which is not advised.
+        supress_not_saving_warning : bool
+            Wether to suppress the warning if no `save_path` is passed.
 
         Returns
         -------
@@ -200,10 +203,11 @@ class QuEmbeddingScorer(QuScorer):
             self.cv_model_copys.append(model_copy)
 
         if save_path is None:
-            print(
-                "Warning: Not storing the scoring-cv results. It is suggested to set the `save_path`-argument. \n" +
-                "You can also call the `to_dir` method on the resulting `QuScorerCVResults`."
-            )
+            if not supress_not_saving_warning:
+                print(
+                    "Warning: Not storing the scoring-cv results. It is suggested to set the `save_path`-argument. \n" +
+                    "You can also call the `to_dir` method on the resulting `QuScorerCVResults`."
+                )
         else:
             qusr.to_dir(path=save_path)
 
@@ -223,6 +227,7 @@ class QuEmbeddingScorer(QuScorer):
         random_state: int=42,
         save_path: str=None,
         supress_id_split_info: bool=False,
+        supress_not_saving_warning: bool=False,
     ) -> QuScorerResults:
         """Wrapper to perform an automatic cross-validation on the data. The
         `IDsKFoldSplit`-object is generated from the passed `QuData`-object and
@@ -263,6 +268,8 @@ class QuEmbeddingScorer(QuScorer):
             are not stored, which is not advised.
         supress_id_split_info : bool
             Wether to suppress the information-output on the (newly generated) ID-split.
+        supress_not_saving_warning : bool
+            Wether to suppress the warning if no `save_path` is passed.
 
         Returns
         -------
@@ -292,6 +299,7 @@ class QuEmbeddingScorer(QuScorer):
             oversample=oversample,
             validate_scores=validate_scores,
             save_path=save_path,
+            supress_not_saving_warning=supress_not_saving_warning,
         )
         return qusr
 
@@ -309,6 +317,7 @@ class QuEmbeddingScorer(QuScorer):
         random_state: int=42,
         save_path: str=None,
         supress_id_split_info: bool=False,
+        supress_not_saving_warning: bool=False,
     ) -> QuScorerResults:
         """Wrapper to perform an automatic evaluation using a simple train-test split. The
         `IDsTrainTestSplit`-object is generated from the passed `QuData`-object and
@@ -349,6 +358,8 @@ class QuEmbeddingScorer(QuScorer):
             are not stored, which is not advised.
         supress_id_split_info : bool
             Wether to suppress the information-output on the (newly generated) ID-split.
+        supress_not_saving_warning : bool
+            Wether to suppress the warning if no `save_path` is passed.
 
         Returns
         -------
@@ -378,6 +389,7 @@ class QuEmbeddingScorer(QuScorer):
             oversample=oversample,
             validate_scores=validate_scores,
             save_path=save_path,
+            supress_not_saving_warning=supress_not_saving_warning,
         )
         return qusr
 

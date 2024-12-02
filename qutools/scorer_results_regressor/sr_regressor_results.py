@@ -1,3 +1,12 @@
+"""
+# Scorer-Results-Regressor Results
+
+This is the last layer of the 2-step regression pipeline. It is used analoguously
+to the [QuScorerResultsClassifier][qutools.scorer_results_classifier.QuScorerResultsClassifier]
+for the data-leakage-free evaluation of regression models in a multi-layer
+modelling on top of a questionnaire scorer.
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -15,7 +24,7 @@ from ..core import check_options, LinearModel
 
 
 
-def jitter(x: np.ndarray, n_sds: float=0.05) -> np.ndarray:
+def _jitter(x: np.ndarray, n_sds: float=0.05) -> np.ndarray:
     sd = np.std(x)
     noise_sd = n_sds * sd
     # noise = np.random.normal(loc=0, scale=noise_sd, size=x.shape)
@@ -23,7 +32,7 @@ def jitter(x: np.ndarray, n_sds: float=0.05) -> np.ndarray:
     noise = np.random.uniform(low=-noise_sd, high=noise_sd, size=x.shape)
     return x + noise
 
-def jitter_cols(
+def _jitter_cols(
     df: pd.DataFrame,
     cols: list[str]|None=None,
     n_sds: float=0.05,
@@ -31,7 +40,7 @@ def jitter_cols(
     if cols is None:
         cols = df.drop(columns="ID").columns.to_list()
     for col in cols:
-        df[col + "_jit"] = jitter(df[col].values, n_sds=n_sds)
+        df[col + "_jit"] = _jitter(df[col].values, n_sds=n_sds)
     return df
 
 
@@ -44,6 +53,19 @@ class QuRegressionResults:
         df_targets: pd.DataFrame=None,
         df_preds: pd.DataFrame=None,
     ) -> None:
+        """Initialize the `QuRegressionResults` object.
+
+        Parameters
+        ----------
+        quconfig : QuConfig
+            The questionnaire configuration object.
+        qusubs : list[QuSubscales]
+            The list of subscales objects.
+        df_targets : pd.DataFrame
+            The dataframe with the target scores.
+        df_preds : pd.DataFrame
+            The dataframe with the predicted scores.
+        """
         self.id_col = quconfig.id_col
         self.quconfig = quconfig
 
@@ -56,7 +78,7 @@ class QuRegressionResults:
             self.subscale_cols += qs.get_subscales()
 
 
-    def get_long_df(
+    def _get_long_df(
             self,
             mode: Literal["train", "test", "all"]="test",
             add_jitter: bool=False,
@@ -75,7 +97,7 @@ class QuRegressionResults:
         df = pd.merge(df_p, df_t, on=[self.id_col, "dim"], how="left", validate="m:1")
 
         if add_jitter:
-            df = jitter_cols(df=df, cols=["score_pred", "score_true"], n_sds=0.1)
+            df = _jitter_cols(df=df, cols=["score_pred", "score_true"], n_sds=0.1)
 
         return df
 
@@ -96,6 +118,7 @@ class QuRegressionResults:
 
 
     def get_qusubs_max_scores(self) -> pd.DataFrame:
+        """Get the maximum scores for each subscale of each subscale object."""
         df = pd.DataFrame()
         for qs in self.qusubs:
             ms = qs.get_max_scores()
@@ -108,8 +131,20 @@ class QuRegressionResults:
             self,
             mode: Literal["train", "test", "all"]="test",
         ) -> pd.DataFrame:
-        df = self.get_long_df(mode=mode, add_jitter=False)
+        """Calculate the Pearson correlation between the predicted and the true scores.
 
+        Parameters
+        ----------
+        mode : str
+            For which data to perform this evaluation. Typically, this will only
+            make sense for the test data.
+
+        Returns
+        -------
+        pd.DataFrame
+            The dataframe with the Pearson correlation coefficients and p-values.
+        """
+        df = self._get_long_df(mode=mode, add_jitter=False)
         ssc: str
         df_show = pd.DataFrame(index=["Pearson r", "p-value"])
         for ssc in self.subscale_cols:
@@ -119,8 +154,6 @@ class QuRegressionResults:
             r, p = stats.pearsonr(x, y)
             df_show[ssc] = [r, p]
 
-        print(f"N-{mode.capitalize()} = {len(x)}")
-
         return df_show
 
 
@@ -129,11 +162,24 @@ class QuRegressionResults:
             mode: Literal["train", "test", "all"]="test",
             verbose: bool=False,
         ) -> tuple[pd.DataFrame, list[LinearModel]]:
-        df = self.get_long_df(mode=mode, add_jitter=False)
+        """Calculate the regression analysis for each subscale.
 
+        Parameters
+        ----------
+        mode : str
+            For which data to perform this evaluation. Typically, this will only
+            make sense for the test data.
+        verbose : bool
+            Whether to print the regression result.
+
+        Returns
+        -------
+        tuple[pd.DataFrame, list[LinearModel]]
+            The dataframe with the R-squared and slope for each subscale and the list of linear models.
+        """
+        df = self._get_long_df(mode=mode, add_jitter=False)
         ssc: str
         df_show = pd.DataFrame(index=["Rsq", "slope"])
-
         lms = []
         for ssc in self.subscale_cols:
             df_ = df[df["dim"]==ssc].copy()
@@ -141,9 +187,6 @@ class QuRegressionResults:
             lm.fit(df_, features=["score_pred"], target="score_true", verbose=verbose)
             df_show[ssc] = [lm.stats["rsq"], lm.coef[1]]
             lms.append(lm)
-
-        print(f"N-{mode.capitalize()} = {df_.shape[0]}")
-
         return df_show, lms
 
 
@@ -152,6 +195,21 @@ class QuRegressionResults:
         mode: Literal["train", "test", "all"]="test",
         verbose: bool=False,
     ) -> pd.DataFrame:
+        """Perform the full analysis of the regression results.
+
+        Parameters
+        ----------
+        mode : str
+            For which data to perform this evaluation. Typically, this will only
+            make sense for the test data.
+        verbose : bool
+            Whether to print the regression result.
+
+        Returns
+        -------
+        pd.DataFrame
+            The dataframe with the correlation and regression analysis.
+        """
         df_cor = self.correlation_analysis(mode=mode)
         df_reg, _ = self.regression_analysis(mode=mode, verbose=verbose)
 
@@ -165,7 +223,26 @@ class QuRegressionResults:
             save_path: str=None,
             **kwargs,
         ) -> sns.FacetGrid:
-        df_plot = self.get_long_df(mode=mode, add_jitter=add_jitter)
+        """Create regression plots for the predicted and true scores.
+
+        Parameters
+        ----------
+        mode : str
+            For which data to perform this evaluation. Typically, this will only
+            make sense for the test data.
+        add_jitter : bool
+            Whether to add jitter to the points.
+        save_path : str
+            The path to save the plot.
+        **kwargs
+            Additional keyword arguments for the plot.
+
+        Returns
+        -------
+        sns.FacetGrid
+            A seaborn FacetGrid object.
+        """
+        df_plot = self._get_long_df(mode=mode, add_jitter=add_jitter)
         hue_order = self._get_hue_order()
 
         name_true = kwargs.get("ylabel", "Score Target")
@@ -174,7 +251,6 @@ class QuRegressionResults:
             'score_true': name_true,
             'score_pred': name_pred,
         })
-
         g = sns.FacetGrid(
             df_plot,
             col="dim", col_wrap=kwargs.get("col_wrap", 5), col_order=self.subscale_cols,
@@ -186,6 +262,8 @@ class QuRegressionResults:
             _ = g.map(sns.scatterplot,"score_pred_jit", "score_true_jit", alpha=0.1)
         _ = g.map(sns.kdeplot, name_pred, name_true, alpha=0.4, bw_adjust=1.5, fill=True)
         g.set_titles(col_template="{col_name}")
+        if "title" in kwargs:
+            g.figure.suptitle(kwargs["title"], y=1.05)
 
         if save_path is not None:
             g.savefig(save_path, bbox_inches="tight", dpi=150)
@@ -199,7 +277,19 @@ class QuRegressionResults:
             save_path: str=None,
             **kwargs,
         ) -> plt.Figure:
-        df_plot = self.get_long_df(mode=mode, add_jitter=False)
+        """Create violin plots for the predicted and true scores.
+
+        Parameters
+        ----------
+        mode : str
+            For which data to perform this evaluation. Typically, this will only
+            make sense for the test data.
+        save_path : str
+            The path to save the plot.
+        **kwargs
+            Additional keyword arguments for the plot.
+        """
+        df_plot = self._get_long_df(mode=mode, add_jitter=False)
         hue_order = self._get_hue_order()
         sccs = self.subscale_cols
 

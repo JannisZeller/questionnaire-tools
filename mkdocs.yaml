@@ -150,9 +150,18 @@ nav:
       - scorer_finetune:    content/autobuilt/scoring/scorer_finetune.md
       - scorer_results:     content/autobuilt/scoring/scorer_results.md
       - taskwise_analysis:  content/autobuilt/scoring/taskwise_analysis.md
+    - scorer_results_classifier:
+      - content/autobuilt/scorer_results_classifier.md
+      - sr_classifier: content/autobuilt/scorer_results_classifier/sr_classifier.md
+      - sr_classifier_results: content/autobuilt/scorer_results_classifier/sr_classifier_results.md
     - scorer_results_regressor:
       - content/autobuilt/scorer_results_regressor.md
+      - sr_regressor: content/autobuilt/scorer_results_regressor/sr_regressor.md
       - sr_regressor_results: content/autobuilt/scorer_results_regressor/sr_regressor_results.md
-  - About: content/about.md
-  - License: content/license.md
-  - Imprint: content/imprint.md
+    - test_classifier:
+      - content/autobuilt/test_classifier.md
+      - scores_classifier: content/autobuilt/test_classifier/scores_classifier.md
+      - classifier_results: content/autobuilt/test_classifier/classifier_results.md
+  # - About: content/about.md
+  # - License: content/license.md
+  # - Imprint: content/imprint.md

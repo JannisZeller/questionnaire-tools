@@ -23,7 +23,7 @@ to gain a better understanding of the required data-structure and the setup.
 from qutools.data.config import QuConfig
 from qutools.data.data import QuData
 from qutools.data.subscales import QuSubscales
-from qutools.clusters import QuScoreClusters, quclst_silhouette_plot
+from qutools.clustering import QuScoreClusters, quclst_silhouette_plot
 
 quconfig = QuConfig.from_yaml("qutools/_toydata/quconfig.yaml")
 
@@ -91,7 +91,7 @@ from typing import Literal, Callable, Self
 from copy import deepcopy
 
 
-from .cluster_wrapper import ClusterWrapper, DBSCANWrapper, KMeansWrapper
+from .cluster_wrapper import ClusterWrapper, DBSCANWrapper, KMeansWrapper, GMWrapper
 from ..data.config import QuConfig
 from ..data.data import QuData
 from ..data.subscales import QuSubscales
@@ -326,11 +326,16 @@ class QuScoreClusters:
                     f"\n Original Exception: {e}"
                 )
             self.clusterer = DBSCANWrapper(HDBSCAN(**kwargs))
-        else:
+        elif isinstance(self.cluster_method, GMWrapper):
             self.clusterer = self.cluster_method
+            self.cluster_method = "GMM"
+        else:
+            print("Warning: Unknown Cluster Method used. Might lead to unexpected behavior.")
+            self.clusterer = self.cluster_method
+            self.cluster_method = "Clusterer"
 
         self.clusterer.fit(X_scr)
-        self.pipeline.steps.append((self.cluster_method, self.clusterer))
+        self.pipeline.steps.append(("Clusterer", self.clusterer))
 
     def __sort_cluster_labels(self) -> None:
         # Stores a dict to sort the cluster labels with increasing total score

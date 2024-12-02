@@ -89,6 +89,13 @@ class QuSubscales:
 
     ## IO
     def to_dir(self, path: str) -> None:
+        """Saves the subscales to a directory.
+
+        Parameters
+        ----------
+        path : str
+            The path to the directory.
+        """
         dir_ = Path(path)
         path_suffix_warning(dir_.suffix, obj="QuSubscales")
         empty_or_create_dir(dir_)
@@ -103,6 +110,13 @@ class QuSubscales:
 
     @staticmethod
     def from_dir(path) -> "QuSubscales":
+        """Loads the subscales from a directory.
+
+        Parameters
+        ----------
+        path : str
+            The path to the directory.
+        """
         dir_ = Path(path)
         path_suffix_warning(dir_.suffix)
 
@@ -120,6 +134,12 @@ class QuSubscales:
         return qusub
 
     def copy(self) -> "QuSubscales":
+        """Creates a deep copy of the `QuestionnaireSubscales` object.
+
+        Returns
+        -------
+        QuSubscales
+        """
         override_names = self.override_names
         if override_names is not None:
             override_names = override_names.copy()
