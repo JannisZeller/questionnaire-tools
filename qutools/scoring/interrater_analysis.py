@@ -23,7 +23,8 @@ from typing import Literal
 from ..core import read_data, score_mc_items, score_mc_tasks
 
 from ..data import QuData
-from ..data.id_splits import IDsKFoldSplit, IDsTrainTestSplit
+from ..id_splits.id_split_k_fold import IDsKFoldSplit
+from ..id_splits.id_split_train_test import IDsTrainTestSplit
 from ..data.config import QuConfig
 
 from ..clustering.clusters import QuScoreClusters

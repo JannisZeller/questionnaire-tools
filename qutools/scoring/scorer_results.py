@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Literal
 
 from ..data.data import QuData
-from ..data.id_splits import IDsSplit, IDsKFoldSplit
+from ..id_splits import IDsSplit, IDsKFoldSplit
 
 from ..core.io import read_data, empty_or_create_dir, write_data, path_suffix_warning
 from ..core.trainulation import evaluate_predictions, print_scores

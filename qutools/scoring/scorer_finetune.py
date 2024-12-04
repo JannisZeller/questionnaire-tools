@@ -59,7 +59,7 @@ from ..core.classifier import print_torch_param_count
 
 from ..data.config import QuConfig
 from ..data.data import QuData
-from ..data.id_splits import IDsSplit, IDsKFoldSplit, IDsTrainTestSplit
+from ..id_splits import IDsSplit, IDsKFoldSplit, IDsTrainTestSplit
 
 from ..clustering.clusters import QuScoreClusters
 
@@ -379,16 +379,16 @@ class QuFinetuneScorer(QuScorer):
         sep: str=" [SEP] ",
         add_scores: bool=True,
     ) -> pd.DataFrame:
-        df_trn = qudata.get_txt(units="tasks", table="long", with_scores=add_scores)
+        df_txt = qudata.get_txt(units="tasks", table="long", with_scores=add_scores)
         if item_task_prefix:
-            df_trn = set_item_task_prefix(
+            df_txt = set_item_task_prefix(
                 df_txt=df_txt,
                 unit_col="task",
                 it_repl_dict=it_repl_dict,
                 sep=sep,
                 verbose=verbose,
             )
-        return df_trn.reset_index(drop=True)
+        return df_txt.reset_index(drop=True)
 
     @staticmethod
     def _get_datasets(

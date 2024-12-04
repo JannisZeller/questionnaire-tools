@@ -17,15 +17,15 @@ from shutil import rmtree
 
 from ..core.io import read_data, write_data
 
-from .data import QuData
+from ..data.data import QuData
+from ..clustering.clusters import QuScoreClusters
+from ..core.io import path_suffix_warning
+
 from .embedding_models import (
     EmbeddingModel,
     OpenAIEmbdModel,
     SentenceTransformersEmbdModel,
 )
-from ..clustering.clusters import QuScoreClusters
-from ..core.io import path_suffix_warning
-
 
 
 class QuEmbeddingsError(Exception):

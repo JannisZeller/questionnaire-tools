@@ -1,6 +1,4 @@
 """
-# Test-Classifier
-
 This module contains classes for direct classification of the full
 edits to the questionnaire based on the "true" scores.
 """

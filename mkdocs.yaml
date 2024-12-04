@@ -129,6 +129,7 @@ nav:
       - io:             content/autobuilt/core/io.md
       - ols:            content/autobuilt/core/ols.md
       - pandas:         content/autobuilt/core/pandas.md
+      - sankey_plotly:  content/autobuilt/core/sankey_plotly.md
       - scores:         content/autobuilt/core/scores.md
       - text:           content/autobuilt/core/text.md
       - trainulation:   content/autobuilt/core/trainulation.md
@@ -138,10 +139,16 @@ nav:
       - content/autobuilt/data.md
       - config:             content/autobuilt/data/config.md
       - data:               content/autobuilt/data/data.md
-      - embedding_models:   content/autobuilt/data/embedding_models.md
-      - embeddings:         content/autobuilt/data/embeddings.md
-      - id_splits:          content/autobuilt/data/id_splits.md
       - subscales:          content/autobuilt/data/subscales.md
+    - embeddings:
+      - content/autobuilt/embeddings.md
+      - embeddings:         content/autobuilt/embeddings/embedding_models.md
+      - embeddings_base:    content/autobuilt/embeddings/embeddings.md
+    - id_splits:
+      - content/autobuilt/id_splits.md
+      - id_split_base:        content/autobuilt/id_splits/id_split_base.md
+      - id_split_k_fold:      content/autobuilt/id_splits/id_split_k_fold.md
+      - id_split_train_test:  content/autobuilt/id_splits/id_split_train_test.md
     - scoring:
       - content/autobuilt/scoring.md
       - interrater_data:    content/autobuilt/scoring/interrater_analysis.md

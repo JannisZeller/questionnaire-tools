@@ -40,8 +40,8 @@ from ..core.io import path_suffix_warning
 
 from ..data.config import QuConfig
 from ..data.data import QuData
-from ..data.id_splits import IDsSplit, IDsKFoldSplit, IDsTrainTestSplit
-from ..data.embeddings import QuEmbeddings, EmbeddingModel, SentenceTransformersEmbdModel
+from ..id_splits import IDsSplit, IDsKFoldSplit, IDsTrainTestSplit
+from ..embeddings.embeddings import QuEmbeddings, EmbeddingModel, SentenceTransformersEmbdModel
 
 from ..clustering.clusters import QuScoreClusters
 
@@ -82,7 +82,7 @@ class QuEmbeddingScorer(QuScorer):
         item_task_prefix : bool
             Wether the response texts should be prefixed with a certrain string
             representing or containing some information on the respective item/task.
-            (using the `it_repl_dict`). Also refer to the [embedding_models][qutools.data.embedding_models]
+            (using the `it_repl_dict`). Also refer to the [embedding_models][qutools.embeddings.embedding_models]
             submodule. This is only effective if `QuData` objects are used
             instead of `QuEmbeddings` objects.
         it_repl_dict : dict[str, str]

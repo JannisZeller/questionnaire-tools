@@ -28,7 +28,7 @@ from tqdm import tqdm
 from typing import Literal
 from abc import ABC, abstractmethod
 
-from .data import QuData
+from ..data.data import QuData
 from ..core import batched
 from ..core.text import set_item_task_prefix, check_seq_lens
 

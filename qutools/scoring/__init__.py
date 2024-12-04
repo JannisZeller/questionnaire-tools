@@ -1,6 +1,4 @@
 """
-# Questionnaire Scorer
-
 This module provides the functionality to score the tasks of a questionnaire using
 NLP-methods. The main interface is the [`QuScorer`][qutools.scoring.scorer_base]
 abstract class which provides the structure for the scorer-models.

@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from ..data.config import QuConfig
 from ..data.data import QuData
-from ..data.id_splits import IDsSplit, IDsTrainTestSplit, IDsKFoldSplit
+from ..id_splits import IDsSplit, IDsTrainTestSplit, IDsKFoldSplit
 
 from ..clustering.clusters import QuScoreClusters
 

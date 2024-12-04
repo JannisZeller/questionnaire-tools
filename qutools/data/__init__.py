@@ -7,11 +7,5 @@ subscales.
 from .config import QuConfig
 from .data import QuData
 from .subscales import QuSubscales
-from .embeddings import (
-    EmbeddingModel,
-    SentenceTransformersEmbdModel,
-    OpenAIEmbdModel,
-    QuEmbeddings,
-)
 
 from ..core.io import read_data, write_data

@@ -22,7 +22,7 @@ from typing import Literal
 from shutil import rmtree
 
 from ..data.config import QuConfig
-from ..data.id_splits import IDsKFoldSplit
+from ..id_splits.id_split_k_fold import IDsKFoldSplit
 
 from ..core.io import read_data, empty_or_create_dir, write_data, path_suffix_warning
 from ..core.trainulation import evaluate_predictions, print_scores
